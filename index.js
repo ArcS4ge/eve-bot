@@ -246,6 +246,7 @@ client.on('messageCreate', async (message) => {
                 `?ping — ping pong, obviously\n` +
                 `?time — what time is it\n` +
                 `?quote — random calm quote\n` +
+                `?talk @user — start a conversation with someone\n` +
                 `?memory — what i remember about you`
             );
         }
@@ -259,6 +260,18 @@ client.on('messageCreate', async (message) => {
                 "“some things are meant to be felt, not explained.”"
             ];
             return message.reply(quotes[Math.floor(Math.random() * quotes.length)]);
+        }
+
+        if (command === 'talk') {
+            const target = message.mentions.users.first();
+            if (!target) return message.reply("you gotta mention someone to talk to.");
+            if (target.id === client.user.id) return message.reply("i'm not gonna talk to myself, that's weird.");
+            const starters = [
+                `hey <@${target.id}>, how's your day going?`,
+                `<@${target.id}>, nice to meet you. what's on your mind?`,
+                `<@${target.id}>, i heard you're interesting. prove it.`
+            ];
+            return message.reply(starters[Math.floor(Math.random() * starters.length)]);
         }
 
         if (command === 'memory') {
