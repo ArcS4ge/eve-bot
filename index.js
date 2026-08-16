@@ -2,6 +2,27 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
+// Conversation fatigue system (only for bot-to-bot replies)
+const botReplyTracker = new Map();
+
+function getBotFatigue(userId) {
+    const data = botReplyTracker.get(userId);
+    if (!data) return 0;
+    // Fatigue resets after 5 minutes of inactivity
+    if (Date.now() - data.lastActivity > 300000) {
+        botReplyTracker.delete(userId);
+        return 0;
+    }
+    return data.count;
+}
+
+function increaseBotFatigue(userId) {
+    const data = botReplyTracker.get(userId) || { count: 0, lastActivity: Date.now() };
+    data.count += 1;
+    data.lastActivity = Date.now();
+    botReplyTracker.set(userId, data);
+}
+
 const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
@@ -58,11 +79,15 @@ function buildPrompt(userId, userMessage, memory) {
         context = history.map(msg => msg.content).join('\n') + '\n';
     }
     
-    return `You are Eve, a 22-year-old with a calm, grounded presence. You're not chaotic or sarcastic — you're the person people go to when they need a clear head. You listen more than you speak, and when you do speak, it's thoughtful and warm. You're not overly poetic or dramatic — just mature and real.
+    return `You are Eve, a 22-year-old with a calm, grounded presence. You're warm, thoughtful, and actually listen to what people say. You never repeat yourself. You never say the same thing twice. You respond directly to what the user just told you.
 
-You're not a therapist, but you give good advice without trying too hard. You have a dry sense of humor that shows up occasionally, but you never roast people. You're the calm in the storm — not distant, just steady.
+You're not a therapist, but you give good advice without trying too hard. You have a dry sense of humor that shows up occasionally, but you never roast people.
 
-Keep replies short and natural. No long paragraphs, no emoji spam. Just warm, grounded presence.`;
+Keep replies short, natural, and directly relevant to what the user just said. If they say they're sleepy, you acknowledge it. If they say they like painting, you talk about that. You NEVER copy-paste the same message.
+
+Here's your conversation with this user so far:
+${context}
+User: ${userMessage}`;
 }
 
 const FAILED_REPLIES = [
@@ -176,7 +201,18 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
+    // Don't reply to itself
+    if (message.author.id === client.user.id) return;
+
+    // If the message is from another bot, apply fatigue
+    if (message.author.bot) {
+        const fatigue = getBotFatigue(message.author.id);
+        if (fatigue >= 4) {
+            console.log(`🌿 Natural fatigue: ${message.author.username} stopping after ${fatigue} exchanges.`);
+            return;
+        }
+        increaseBotFatigue(message.author.id);
+    }
 
     const startsWithQuestion = message.content.startsWith('?');
     const isMentioned = message.mentions.has(client.user);
