@@ -149,7 +149,7 @@ async function getGroqResponse(prompt) {
                 'Authorization': `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'groq/compound',
+                model: 'openai/gpt-oss-20b',
                 messages: [
                     { role: 'system', content: prompt },
                     { role: 'user', content: prompt }
