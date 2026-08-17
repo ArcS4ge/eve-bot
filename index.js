@@ -293,7 +293,7 @@ client.on('messageCreate', async (message) => {
                 `<@${target.id}>, nice to meet you. what's on your mind?`,
                 `<@${target.id}>, i heard you're interesting. prove it.`
             ];
-            return message.reply(starters[Math.floor(Math.random() * starters.length)]);
+            return message.channel.send(starters[Math.floor(Math.random() * starters.length)]);
         }
 
         if (command === 'memory') {
