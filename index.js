@@ -23,6 +23,17 @@ function increaseBotFatigue(userId) {
     botReplyTracker.set(userId, data);
 }
 
+// Cooldown system (only for bot-to-bot replies)
+const botCooldown = new Map();
+
+function canBotReplyToBot(botId) {
+    const now = Date.now();
+    const last = botCooldown.get(botId) || 0;
+    if (now - last < 2000) return false; // 2 second cooldown for bots
+    botCooldown.set(botId, now);
+    return true;
+}
+
 const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
@@ -204,8 +215,14 @@ client.on('messageCreate', async (message) => {
     // Don't reply to itself
     if (message.author.id === client.user.id) return;
 
-    // If the message is from another bot, apply fatigue
+    // If the message is from another bot, apply cooldown + fatigue
     if (message.author.bot) {
+        // Cooldown check
+        if (!canBotReplyToBot(message.author.id)) {
+            console.log(`⏳ Cooldown: ${message.author.username} is replying too fast.`);
+            return;
+        }
+        // Fatigue check
         const fatigue = getBotFatigue(message.author.id);
         if (fatigue >= 4) {
             console.log(`🌿 Natural fatigue: ${message.author.username} stopping after ${fatigue} exchanges.`);
