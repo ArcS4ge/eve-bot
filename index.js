@@ -214,12 +214,17 @@ client.on('messageCreate', async (message) => {
         increaseBotFatigue(message.author.id);
     }
 
+    // 🚫 Don't dive-in if the message is a reply to a user (not a bot)
+    if (message.reference && !message.mentions.has(client.user)) {
+        return;
+    }
+
     const startsWithQuestion = message.content.startsWith('?');
     const isMentioned = message.mentions.has(client.user);
     const isReplyToHer = message.reference?.messageId && 
         (await message.fetchReference()).author.id === client.user.id;
     
-    const shouldDiveIn = Math.random() < 0.05;
+    const shouldDiveIn = false; // 🚫 DISABLED (Eve is calm and doesn't dive in)
     
     if (startsWithQuestion) {
         const args = message.content.slice(1).trim().split(/ +/);
