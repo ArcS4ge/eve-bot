@@ -149,7 +149,7 @@ async function getGroqResponse(prompt) {
                 'Authorization': `Bearer ${GROQ_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
+                model: 'groq/compound',
                 messages: [
                     { role: 'system', content: prompt },
                     { role: 'user', content: prompt }
@@ -241,7 +241,7 @@ client.on('messageCreate', async (message) => {
     const isReplyToHer = message.reference?.messageId && 
         (await message.fetchReference()).author.id === client.user.id;
     
-    const shouldDiveIn = false; // 🚫 DISABLED (Eve is calm and doesn't dive in)
+    const shouldDiveIn = false; // 🚫 DISABLED
     
     if (startsWithQuestion) {
         const args = message.content.slice(1).trim().split(/ +/);
